@@ -5,17 +5,31 @@ on:
     branches:
       - main
 
+env:
+  IMAGE_NAME: my-new-project:latest
+  CONTAINER_NAME: my-new-project-app
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER }}
+      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
     steps:
+      - name: Validate deployment secrets
+        run: |
+          test -n "$EC2_HOST" || { echo "Missing GitHub secret: EC2_HOST"; exit 1; }
+          test -n "$EC2_USER" || { echo "Missing GitHub secret: EC2_USER"; exit 1; }
+          test -n "$EC2_SSH_KEY" || { echo "Missing GitHub secret: EC2_SSH_KEY"; exit 1; }
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ env.EC2_SSH_KEY }}
           script: |
             if [ ! -d ~/my-new-project ]; then
               git clone https://github.com/${{ github.repository }}.git ~/my-new-project
@@ -23,7 +37,7 @@ jobs:
 
             cd ~/my-new-project
             git pull origin main
-            docker build -t my-new-project .
-            docker stop my-new-project-app || true
-            docker rm my-new-project-app || true
-            docker run -d --name my-new-project-app -p 3000:3000 my-new-project
+            docker build -t $IMAGE_NAME .
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+            docker run -d --name $CONTAINER_NAME -p 3000:3000 $IMAGE_NAME
