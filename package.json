@@ -1,0 +1,22 @@
+{
+  "name": "my-new-project",
+  "version": "1.0.0",
+  "description": "Simple Express backend with Docker, Jenkins, and GitHub Actions deployment templates.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [
+    "express",
+    "docker",
+    "jenkins",
+    "github-actions",
+    "ec2"
+  ],
+  "author": "Abhay Kumar Gupta",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

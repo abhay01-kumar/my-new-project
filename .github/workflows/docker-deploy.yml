@@ -1,0 +1,29 @@
+name: Docker Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            if [ ! -d ~/my-new-project ]; then
+              git clone https://github.com/${{ github.repository }}.git ~/my-new-project
+            fi
+
+            cd ~/my-new-project
+            git pull origin main
+            docker build -t my-new-project .
+            docker stop my-new-project-app || true
+            docker rm my-new-project-app || true
+            docker run -d --name my-new-project-app -p 3000:3000 my-new-project
