@@ -24,6 +24,18 @@ jobs:
           test -n "$EC2_USER" || { echo "Missing EC2 user. Add either repository secret EC2_USER or repository variable EC2_USER."; exit 1; }
           test -n "$EC2_SSH_KEY" || { echo "Missing GitHub secret: EC2_SSH_KEY"; exit 1; }
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy project files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ env.EC2_SSH_KEY }}
+          source: ".dockerignore,Dockerfile,index.js,package.json,package-lock.json"
+          target: "~/my-new-project"
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -31,13 +43,10 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ env.EC2_SSH_KEY }}
           script: |
-            if [ ! -d ~/my-new-project ]; then
-              git clone https://github.com/${{ github.repository }}.git ~/my-new-project
-            fi
-
             cd ~/my-new-project
-            git pull origin main
-            docker build -t $IMAGE_NAME .
-            docker stop $CONTAINER_NAME || true
-            docker rm $CONTAINER_NAME || true
-            docker run -d --name $CONTAINER_NAME -p 3000:3000 $IMAGE_NAME
+            sudo systemctl start docker || true
+            command -v docker >/dev/null || { echo "Docker is not installed on EC2"; exit 1; }
+            sudo docker build -t $IMAGE_NAME .
+            sudo docker stop $CONTAINER_NAME || true
+            sudo docker rm $CONTAINER_NAME || true
+            sudo docker run -d --restart unless-stopped --name $CONTAINER_NAME -p 3000:3000 $IMAGE_NAME
