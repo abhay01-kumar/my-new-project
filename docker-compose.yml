@@ -1,7 +1,10 @@
 services:
   app:
-    build: .
+    image: my-new-project:latest
+    build:
+      context: .
     container_name: my-new-project-app
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:

@@ -34,8 +34,21 @@ Open:
 ## Run with Docker
 
 ```bash
-docker build -t my-new-project .
-docker run -d -p 3000:3000 --name my-new-project-app my-new-project
+docker build -t my-new-project:latest .
+docker run -d -p 3000:3000 --name my-new-project-app my-new-project:latest
+```
+
+You can also use the helper scripts:
+
+```bash
+npm run docker:build
+npm run docker:run
+```
+
+To stop and remove the container:
+
+```bash
+npm run docker:stop
 ```
 
 ## Run with Docker Compose
@@ -43,6 +56,8 @@ docker run -d -p 3000:3000 --name my-new-project-app my-new-project
 ```bash
 docker compose up --build
 ```
+
+The compose setup builds and uses the project image `my-new-project:latest`.
 
 ## Jenkins setup summary
 

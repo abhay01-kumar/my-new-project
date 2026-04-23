@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "docker:build": "docker build -t my-new-project:latest .",
+    "docker:run": "docker run -d -p 3000:3000 --name my-new-project-app my-new-project:latest",
+    "docker:stop": "sh -c 'docker stop my-new-project-app || true; docker rm my-new-project-app || true'"
   },
   "keywords": [
     "express",

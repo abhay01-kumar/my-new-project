@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'my-new-project'
+        IMAGE_NAME = 'my-new-project:latest'
         CONTAINER_NAME = 'my-new-project-app'
     }
 
