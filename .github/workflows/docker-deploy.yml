@@ -9,20 +9,22 @@ on:
 env:
   IMAGE_NAME: my-new-project:latest
   CONTAINER_NAME: my-new-project-app
+  EC2_HOST: ec2-34-235-160-0.compute-1.amazonaws.com
+  EC2_USER: ec2-user
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      EC2_HOST: ${{ secrets.EC2_HOST || vars.EC2_HOST || 'ec2-34-235-160-0.compute-1.amazonaws.com' }}
-      EC2_USER: ${{ secrets.EC2_USER || vars.EC2_USER || 'ec2-user' }}
       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
     steps:
-      - name: Validate workflow defaults
+      - name: Validate workflow values
         run: |
           test -n "$EC2_HOST" || { echo "Missing EC2 host."; exit 1; }
           test -n "$EC2_USER" || { echo "Missing EC2 user."; exit 1; }
+          echo "EC2 host set to $EC2_HOST"
+          echo "EC2 user set to $EC2_USER"
 
       - name: Checkout repository
         uses: actions/checkout@v4
