@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: my-new-project:latest
@@ -13,15 +14,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      EC2_HOST: ${{ secrets.EC2_HOST != '' && secrets.EC2_HOST || vars.EC2_HOST }}
-      EC2_USER: ${{ secrets.EC2_USER != '' && secrets.EC2_USER || vars.EC2_USER }}
+      EC2_HOST: ${{ secrets.EC2_HOST || vars.EC2_HOST || 'ec2-34-235-160-0.compute-1.amazonaws.com' }}
+      EC2_USER: ${{ secrets.EC2_USER || vars.EC2_USER || 'ec2-user' }}
       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
     steps:
       - name: Validate deployment secrets
         run: |
-          test -n "$EC2_HOST" || { echo "Missing EC2 host. Add either repository secret EC2_HOST or repository variable EC2_HOST."; exit 1; }
-          test -n "$EC2_USER" || { echo "Missing EC2 user. Add either repository secret EC2_USER or repository variable EC2_USER."; exit 1; }
+          test -n "$EC2_HOST" || { echo "Missing EC2 host."; exit 1; }
+          test -n "$EC2_USER" || { echo "Missing EC2 user."; exit 1; }
           test -n "$EC2_SSH_KEY" || { echo "Missing GitHub secret: EC2_SSH_KEY"; exit 1; }
 
       - name: Checkout repository
