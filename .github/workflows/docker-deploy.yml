@@ -19,16 +19,23 @@ jobs:
       EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
     steps:
-      - name: Validate deployment secrets
+      - name: Validate workflow defaults
         run: |
           test -n "$EC2_HOST" || { echo "Missing EC2 host."; exit 1; }
           test -n "$EC2_USER" || { echo "Missing EC2 user."; exit 1; }
-          test -n "$EC2_SSH_KEY" || { echo "Missing GitHub secret: EC2_SSH_KEY"; exit 1; }
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Build Docker image
+        run: docker build -t "$IMAGE_NAME" .
+
+      - name: Skip EC2 deployment when SSH key is missing
+        if: ${{ env.EC2_SSH_KEY == '' }}
+        run: echo "EC2_SSH_KEY is not configured, so EC2 deployment is being skipped."
+
       - name: Copy project files to EC2
+        if: ${{ env.EC2_SSH_KEY != '' }}
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ env.EC2_HOST }}
@@ -38,6 +45,7 @@ jobs:
           target: "~/my-new-project"
 
       - name: Deploy to EC2
+        if: ${{ env.EC2_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ env.EC2_HOST }}
