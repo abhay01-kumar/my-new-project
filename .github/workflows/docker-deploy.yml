@@ -36,13 +36,23 @@ jobs:
         if: ${{ env.EC2_SSH_KEY == '' }}
         run: echo "EC2_SSH_KEY is not configured, so EC2 deployment is being skipped."
 
+      - name: Prepare SSH key file
+        if: ${{ env.EC2_SSH_KEY != '' }}
+        run: |
+          printf '%s\n' "$EC2_SSH_KEY" | tr -d '\r' | sed '$ s/%$//' > "${RUNNER_TEMP}/ec2_key"
+          chmod 600 "${RUNNER_TEMP}/ec2_key"
+          ssh-keygen -yf "${RUNNER_TEMP}/ec2_key" >/dev/null || {
+            echo "EC2_SSH_KEY is invalid. Re-save the private key in GitHub Secrets without extra characters."
+            exit 1
+          }
+
       - name: Copy project files to EC2
         if: ${{ env.EC2_SSH_KEY != '' }}
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ env.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ env.EC2_SSH_KEY }}
+          key_path: ${{ runner.temp }}/ec2_key
           source: ".dockerignore,Dockerfile,index.js,package.json,package-lock.json"
           target: "~/my-new-project"
 
@@ -52,7 +62,7 @@ jobs:
         with:
           host: ${{ env.EC2_HOST }}
           username: ${{ env.EC2_USER }}
-          key: ${{ env.EC2_SSH_KEY }}
+          key_path: ${{ runner.temp }}/ec2_key
           script: |
             cd ~/my-new-project
             sudo systemctl start docker || true
